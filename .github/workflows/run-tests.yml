@@ -22,12 +22,14 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 1 # Keep it simple and avoid sparse checkout
 
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.x'
-        
+
     - name: Set up Android SDK
       run: |
         # Create directories for Android SDK
