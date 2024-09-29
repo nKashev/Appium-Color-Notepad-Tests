@@ -64,5 +64,5 @@ jobs:
 
     # Set environment variables for Android SDK
     env:
-      ANDROID_SDK_ROOT: ${{ runner.home }}/sdk
-      PATH: ${{ runner.home }}/sdk/cmdline-tools/latest/bin:${{ runner.home }}/sdk/platform-tools:${{ runner.home }}/sdk/emulator:${{ runner.home }}/sdk/tools:${{ runner.home }}/sdk/tools/bin:$PATH
+      ANDROID_SDK_ROOT: $HOME/sdk
+      PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
