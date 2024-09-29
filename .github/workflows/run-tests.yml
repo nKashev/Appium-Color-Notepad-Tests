@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Install tar (required for extracting archives)
-      run: sudo apt-get install -y tar
+      run: apt-get install -y tar
 
     - name: Checkout code
       uses: actions/checkout@v4
@@ -34,8 +34,8 @@ jobs:
     # Install Android SDK and tools
     - name: Set up Android SDK
       run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y lib32stdc++6 lib32z1 # Dependencies for Android SDK
+        apt-get update -qq
+        apt-get install -y lib32stdc++6 lib32z1 # Dependencies for Android SDK
         wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip -d $HOME/sdk
         mkdir -p $HOME/sdk/cmdline-tools/latest
