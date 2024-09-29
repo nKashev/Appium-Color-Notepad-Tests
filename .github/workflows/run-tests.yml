@@ -62,6 +62,7 @@ jobs:
 
     - name: Create and start AVD
       run: |
+        export PATH=$PATH:$HOME/sdk/platform-tools:$HOME/sdk/emulator
         nohup $HOME/sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         adb wait-for-device
         adb shell input keyevent 82
