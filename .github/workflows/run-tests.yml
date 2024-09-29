@@ -16,25 +16,18 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4 # Update to the latest version
+      uses: actions/checkout@v4
 
-    - name: Set up JDK
-      uses: actions/setup-java@v4 # Ensure using v4, which supports Node 20
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v3
       with:
-        distribution: 'temurin' # See 'Supported distributions' for available options
-        java-version: '21'
-
-    - name: Install Node.js
-      uses: actions/setup-node@v3 # Use the latest version for Node.js 20
-      with:
-        node-version: '20' # Update to Node.js 20
+        dotnet-version: '6.x'
 
     - name: Install Appium
       run: npm install -g appium
 
-    - name: Run Tests
-      run: |
-        # Install necessary dependencies for your tests
-        npm install # or your build command
-        # Run your tests
-        npm test # or the command to run your tests
+    - name: Build the solution
+      run: dotnet build Notepad.sln
+
+    - name: Run the tests
+      run: dotnet test NotepadTestsPom/NotepadTestsPom.csproj
