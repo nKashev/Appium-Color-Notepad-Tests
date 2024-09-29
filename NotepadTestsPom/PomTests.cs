@@ -1,47 +1,66 @@
 using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium;
+using NUnit.Framework;
+using OpenQA.Selenium.Appium.Service;
 
 namespace NotepadTestsPom
 {
     [TestFixture]
     public class NotepadTests
     {
-        private AndroidDriver _driver;
+        private AndroidDriver<AndroidElement> _driver;
         private NotepadPage _notepadPage;
-        // private AppiumLocalService _appiumLocalService; // Comment this out if Appium server is already running
+        private AppiumLocalService _appiumLocalService;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            /* _appiumLocalService = new AppiumServiceBuilder()
-                  .WithIPAddress("127.0.0.1")
-                  .UsingPort(4723)
-                  .Build();
-              _appiumLocalService.Start();*/
-
-            var androidOptions = new AppiumOptions
+            try
             {
-                PlatformName = "Android",
-                AutomationName = "UIAutomator2",
-                DeviceName = "Pixel_7",
-                App = @"apk/Notepad.apk"
-            };
-            androidOptions.AddAdditionalAppiumOption("autoGrantPermissions", true);
+                // Start the Appium service
+                _appiumLocalService = new AppiumServiceBuilder()
+                    .WithIPAddress("127.0.0.1")
+                    .UsingPort(4723)
+                    .Build();
+                _appiumLocalService.Start();
 
-            // Use the existing Appium server URL
-            _driver = new AndroidDriver(new Uri("http://127.0.0.1:4723"), androidOptions);
-            _notepadPage = new NotepadPage(_driver);
-            _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+                // Setup Android options
+                var androidOptions = new AppiumOptions
+                {
+                    PlatformName = "Android",
+                    AutomationName = "UIAutomator2",
+                    DeviceName = "Pixel_7",
+                    App = @"apk/Notepad.apk"
+                };
+                androidOptions.AddAdditionalAppiumOption("autoGrantPermissions", true);
 
-            _notepadPage.SkipTutorial();
+                // Initialize the driver
+                _driver = new AndroidDriver<AndroidElement>(new Uri("http://127.0.0.1:4723"), androidOptions);
+                _notepadPage = new NotepadPage(_driver);
+                _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+
+                _notepadPage.SkipTutorial(); // Adjust this according to your app flow
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during setup: {ex.Message}");
+                throw; // Rethrow to fail the test if setup fails
+            }
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            _driver?.Quit();
-            //_appiumLocalService.Dispose();// Comment this out if Appium server is already running
+            try
+            {
+                _driver?.Quit(); // Quit the driver
+                _appiumLocalService?.Dispose(); // Dispose the service
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during teardown: {ex.Message}");
+            }
         }
 
         [Test, Order(1)]
