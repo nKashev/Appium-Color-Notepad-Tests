@@ -13,6 +13,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      appium:
+        image: appium/appium
+        ports:
+          - 4723:4723
 
     steps:
     - name: Checkout code
@@ -21,10 +26,23 @@ jobs:
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '6.x'
+        dotnet-version: '6.x' # Use the appropriate .NET version
 
-    - name: Install Appium
-      run: npm install -g appium
+    - name: Install necessary dependencies
+      run: sudo apt-get install -y android-sdk adb
+
+    - name: Start Android Emulator
+      run: |
+        sdkmanager --install "system-images;android-30;google_apis;x86_64"
+        echo "y" | avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
+        nohup emulator -avd test -no-window -no-audio &
+        adb wait-for-device
+        adb shell input keyevent 82
+
+    - name: Start Appium
+      run: |
+        appium --log-level error &
+        sleep 10
 
     - name: Build the solution
       run: dotnet build Notepad.sln
