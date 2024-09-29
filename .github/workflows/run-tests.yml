@@ -1,9 +1,9 @@
 name: Run Appium Tests
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   # pull_request:
   #   branches:
   #     - main
@@ -59,6 +59,11 @@ jobs:
         cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
         cd $HOME/.android/avd
         tar -xvf Pixel_7_1.avd.tar.xz
+
+    - name: Copy Emulator Binaries
+      run: |
+        cp tools/emulator.exe $HOME/sdk/emulator/
+        cp tools/emulator-check.exe $HOME/sdk/emulator/
 
     - name: Create and start AVD
       run: |
