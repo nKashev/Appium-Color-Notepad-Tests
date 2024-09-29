@@ -1,8 +1,14 @@
 name: Run Appium Tests
 
 on:
+  push:
+    branches:
+      - main
+  # pull_request:
+  #   branches:
+  #     - main
   schedule:
-    - cron: '0 0 * * *' # This runs the workflow daily at midnight UTC
+    - cron: '0 16 * * *' # This runs the workflow daily at midnight UTC
 
 jobs:
   test:
@@ -10,17 +16,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up JDK
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
-        java-version: '11' # Use the appropriate Java version
+        java-version: '22' # Use the appropriate Java version
 
     - name: Install Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
-        node-version: '16' # Use the appropriate Node.js version
+        node-version: '20' # Use the appropriate Node.js version
 
     - name: Install Appium
       run: npm install -g appium
