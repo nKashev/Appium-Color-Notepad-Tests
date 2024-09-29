@@ -42,12 +42,14 @@ jobs:
         mv $HOME/sdk/cmdline-tools/cmdline-tools $HOME/sdk/cmdline-tools/latest
 
     - name: Set Android SDK environment variables
-      run: echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
+      run: |
+        echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
+        echo "PATH=$HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH" >> $GITHUB_ENV
 
     - name: Install Android Emulator and System Image
       run: |
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-        
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64" "emulator"
+
     - name: Create and start AVD
       run: |
         echo "no" | $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
@@ -58,7 +60,6 @@ jobs:
     - name: Run Tests
       run: |
         dotnet test NotepadTestsPom/NotepadTestsPom.csproj
-        dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csprojnd
+        dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
       env:
         DOTNET_ROOT: /usr/share/dotnet
-        PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
