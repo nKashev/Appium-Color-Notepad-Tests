@@ -23,7 +23,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 1 # Keep it simple and avoid sparse checkout
+        repository: nKashev/Appium-Color-Notepad-Tests
+        fetch-depth: 1  # Only get the latest commit
+        clean: true
+        lfs: false
+        submodules: false
+        set-safe-directory: true
 
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v3
