@@ -1,9 +1,9 @@
 name: Run Appium Tests
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   # pull_request:
   #   branches:
   #     - main
@@ -27,7 +27,8 @@ jobs:
     - name: Install required packages
       run: |
         sudo apt-get update
-        sudo apt-get install -y unzip wget
+        sudo apt-get install -y unzip wget xz-utils
+        # Install Node.js and Appium
         curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
         sudo apt-get install -y nodejs
         npm install -g appium
@@ -51,16 +52,17 @@ jobs:
     - name: Install Android Emulator and System Image
       run: |
         yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-
-    - name: Download AVD Archive
+        
+    - name: Download and extract AVD
       run: |
-        wget -O system_image.zip "https://drive.google.com/uc?export=download&id=1EnwRik5jWLgQST0YgjMWvYsqhaS54_1_"
-        unzip system_image.zip -d $HOME/sdk/system-images/android-30/google_apis/x86_64/
+        mkdir -p $HOME/.android/avd
+        cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
+        cd $HOME/.android/avd
+        tar -xvf Pixel_7_1.avd.tar.xz
 
     - name: Create and start AVD
       run: |
-        echo "no" | $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
-        nohup $HOME/sdk/emulator/emulator -avd test -no-window -no-audio &
+        nohup $HOME/sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         adb wait-for-device
         adb shell input keyevent 82
 
