@@ -20,6 +20,9 @@ jobs:
           - 4723:4723
 
     steps:
+    - name: Install tar (required for extracting archives)
+      run: sudo apt-get install -y tar
+
     - name: Checkout code
       uses: actions/checkout@v4
 
