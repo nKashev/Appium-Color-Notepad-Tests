@@ -20,9 +20,6 @@ jobs:
           - 4723:4723
 
     steps:
-    - name: Install tar (required for extracting archives)
-      run: apt update && apt install -y tar
-
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -30,18 +27,15 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.x'
-
-    # Install Android SDK and tools
+        
     - name: Set up Android SDK
       run: |
-        apt update
-        apt install -y lib32stdc++6 lib32z1 # Dependencies for Android SDK
-        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
-        unzip cmdline-tools.zip -d $HOME/sdk
+        # Create directories for Android SDK
         mkdir -p $HOME/sdk/cmdline-tools/latest
-        mv $HOME/sdk/cmdline-tools/* $HOME/sdk/cmdline-tools/latest
+        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $HOME/sdk/cmdline-tools/latest
         yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --update
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --update
 
     - name: Install Android Emulator and System Image
       run: |
