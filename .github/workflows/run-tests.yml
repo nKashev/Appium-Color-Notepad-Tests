@@ -11,62 +11,53 @@ on:
     - cron: '0 16 * * *'
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-    services:
-      appium:
-        image: appium/appium
-        ports:
-          - 4723:4723
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        repository: nKashev/Appium-Color-Notepad-Tests
-        fetch-depth: 1  # Only get the latest commit
-        clean: true
-        lfs: false
-        submodules: false
-        set-safe-directory: true
 
-    - name: Install .NET SDK
-      uses: actions/setup-dotnet@v3
+    - name: Set up JDK
+      uses: actions/setup-java@v2
       with:
-        dotnet-version: '6.x'
+        java-version: '11' # or your desired Java version
 
-    - name: Set up Android SDK
+    - name: Install required packages
       run: |
-        # Create directories for Android SDK
-        mkdir -p $HOME/sdk/cmdline-tools/latest
-        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
-        unzip cmdline-tools.zip -d $HOME/sdk/cmdline-tools/latest
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --update
+        sudo apt-get update
+        sudo apt-get install -y unzip wget
+        # Install Node.js and Appium
+        curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        npm install -g appium
+
+    - name: Install Android SDK
+      run: |
+        mkdir -p $HOME/sdk/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -P $HOME/sdk/cmdline-tools
+        unzip $HOME/sdk/cmdline-tools/commandlinetools-linux-7583922_latest.zip -d $HOME/sdk/cmdline-tools
+        rm $HOME/sdk/cmdline-tools/commandlinetools-linux-7583922_latest.zip
+        mv $HOME/sdk/cmdline-tools/cmdline-tools $HOME/sdk/cmdline-tools/latest
+
+    - name: Set Android SDK environment variables
+      run: echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
 
     - name: Install Android Emulator and System Image
       run: |
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64" "emulator"
-        yes | $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
-
-    - name: Start Android Emulator
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+        
+    - name: Create and start AVD
       run: |
+        echo "no" | $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
         nohup $HOME/sdk/emulator/emulator -avd test -no-window -no-audio &
-        $HOME/sdk/platform-tools/adb wait-for-device
-        $HOME/sdk/platform-tools/adb shell input keyevent 82 # Unlock emulator
+        adb wait-for-device
+        adb shell input keyevent 82
 
-    - name: Start Appium
+    - name: Run Tests
       run: |
-        appium --log-level error &
-        sleep 10
-
-    - name: Build the solution
-      run: dotnet build Notepad.sln
-
-    - name: Run the tests
-      run: dotnet test NotepadTestsPom/NotepadTestsPom.csproj
-
-    # Set environment variables for Android SDK
-    env:
-      ANDROID_SDK_ROOT: $HOME/sdk
-      PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
+        dotnet test NotepadTestsPom/NotepadTestsPom.csproj
+        dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csprojnd
+      env:
+        DOTNET_ROOT: /usr/share/dotnet
+        PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
