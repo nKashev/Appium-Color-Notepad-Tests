@@ -21,7 +21,8 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v4 # Ensure using v4, which supports Node 20
       with:
-        java-version: '21' # Use the appropriate Java version
+        distribution: 'temurin' # See 'Supported distributions' for available options
+        java-version: '21'
 
     - name: Install Node.js
       uses: actions/setup-node@v3 # Use the latest version for Node.js 20
