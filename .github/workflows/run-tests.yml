@@ -19,9 +19,9 @@ jobs:
       uses: actions/checkout@v4 # Update to the latest version
 
     - name: Set up JDK
-      uses: actions/setup-java@v3 # Ensure using v3, which supports Node 20
+      uses: actions/setup-java@v4 # Ensure using v4, which supports Node 20
       with:
-        java-version: '17' # Use the appropriate Java version
+        java-version: '21' # Use the appropriate Java version
 
     - name: Install Node.js
       uses: actions/setup-node@v3 # Use the latest version for Node.js 20
