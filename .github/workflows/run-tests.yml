@@ -1,9 +1,9 @@
 name: Run Appium Tests
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   # pull_request:
   #   branches:
   #     - main
@@ -21,17 +21,21 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v4
       with:
-        distribution: 'temurin' # See 'Supported distributions' for available options
+        distribution: 'temurin'
         java-version: '21'
 
     - name: Install required packages
       run: |
         sudo apt-get update
         sudo apt-get install -y unzip wget
-        # Install Node.js and Appium
         curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
         sudo apt-get install -y nodejs
         npm install -g appium
+
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
 
     - name: Install Android SDK
       run: |
@@ -42,13 +46,16 @@ jobs:
         mv $HOME/sdk/cmdline-tools/cmdline-tools $HOME/sdk/cmdline-tools/latest
 
     - name: Set Android SDK environment variables
-      run: |
-        echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH" >> $GITHUB_ENV
+      run: echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
 
     - name: Install Android Emulator and System Image
       run: |
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64" "emulator"
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+
+    - name: Download AVD Archive
+      run: |
+        wget -O system_image.zip "https://drive.google.com/uc?export=download&id=1EnwRik5jWLgQST0YgjMWvYsqhaS54_1_"
+        unzip system_image.zip -d $HOME/sdk/system-images/android-30/google_apis/x86_64/
 
     - name: Create and start AVD
       run: |
@@ -63,3 +70,4 @@ jobs:
         dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
       env:
         DOTNET_ROOT: /usr/share/dotnet
+        PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
