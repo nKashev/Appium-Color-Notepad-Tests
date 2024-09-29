@@ -8,7 +8,7 @@ on:
   #   branches:
   #     - main
   schedule:
-    - cron: '0 16 * * *' # This runs the workflow daily at midnight UTC
+    - cron: '0 16 * * *'
 
 jobs:
   test:
@@ -26,18 +26,30 @@ jobs:
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '6.x' # Use the appropriate .NET version
+        dotnet-version: '6.x'
 
-    - name: Install necessary dependencies
-      run: sudo apt-get install -y android-sdk adb
+    # Install Android SDK and tools
+    - name: Set up Android SDK
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y lib32stdc++6 lib32z1 # Dependencies for Android SDK
+        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $HOME/sdk
+        mkdir -p $HOME/sdk/cmdline-tools/latest
+        mv $HOME/sdk/cmdline-tools/* $HOME/sdk/cmdline-tools/latest
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --update
+
+    - name: Install Android Emulator and System Image
+      run: |
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64" "emulator"
+        yes | $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
 
     - name: Start Android Emulator
       run: |
-        sdkmanager --install "system-images;android-30;google_apis;x86_64"
-        echo "y" | avdmanager create avd -n test -k "system-images;android-30;google_apis;x86_64" --force
-        nohup emulator -avd test -no-window -no-audio &
-        adb wait-for-device
-        adb shell input keyevent 82
+        nohup $HOME/sdk/emulator/emulator -avd test -no-window -no-audio &
+        $HOME/sdk/platform-tools/adb wait-for-device
+        $HOME/sdk/platform-tools/adb shell input keyevent 82 # Unlock emulator
 
     - name: Start Appium
       run: |
@@ -49,3 +61,8 @@ jobs:
 
     - name: Run the tests
       run: dotnet test NotepadTestsPom/NotepadTestsPom.csproj
+
+    # Set environment variables for Android SDK
+    env:
+      ANDROID_SDK_ROOT: ${{ runner.home }}/sdk
+      PATH: ${{ runner.home }}/sdk/cmdline-tools/latest/bin:${{ runner.home }}/sdk/platform-tools:${{ runner.home }}/sdk/emulator:${{ runner.home }}/sdk/tools:${{ runner.home }}/sdk/tools/bin:$PATH
