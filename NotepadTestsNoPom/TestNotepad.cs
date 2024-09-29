@@ -1,7 +1,8 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium;
-
+using NUnit.Framework;
+using System;
 
 namespace NotepadTestsNoPom
 {
@@ -9,35 +10,33 @@ namespace NotepadTestsNoPom
     public class NotepadTests
     {
         private AndroidDriver _driver;
-        // private AppiumLocalService _appiumLocalService; // Comment this out if Appium server is already running
-        
+        private AppiumLocalService _appiumLocalService;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            /* _appiumLocalService = new AppiumServiceBuilder()
+            // Start Appium Local Service
+            _appiumLocalService = new AppiumServiceBuilder()
                   .WithIPAddress("127.0.0.1")
                   .UsingPort(4723)
                   .Build();
-              _appiumLocalService.Start();*/
+            _appiumLocalService.Start();
 
+            // Setup Appium options
             var androidOptions = new AppiumOptions
             {
                 PlatformName = "Android",
                 AutomationName = "UIAutomator2",
                 DeviceName = "Pixel_7",
-                App = @"apk/Notepad.apk"
+                App = @"apk/Notepad.apk" // Adjust this path as necessary
             };
             androidOptions.AddAdditionalAppiumOption("autoGrantPermissions", true);
 
-
-            //_driver = new AndroidDriver(_appiumLocalService.ServiceUrl, androidOptions);
-
             // Use the existing Appium server URL
             _driver = new AndroidDriver(new Uri("http://127.0.0.1:4723"), androidOptions);
-
             _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
 
+            // Handle tutorial skipping
             try
             {
                 var skipTutorial = _driver.FindElement(MobileBy.Id("com.socialnmobile.dictapps.notepad.color.note:id/btn_start_skip"));
@@ -47,16 +46,15 @@ namespace NotepadTestsNoPom
             {
                 // Tutorial skip button not found, continue with setup
             }
-
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
             _driver?.Quit();
-            //_appiumLocalService.Dispose();// Comment this out if Appium server is already running
+            _appiumLocalService.Dispose(); // Ensure the Appium service is stopped
         }
-
+        
         [Test, Order(1)]
         public void Test_CreateNote()
 
