@@ -51,22 +51,19 @@ jobs:
 
     - name: Install Android Emulator and System Image
       run: |
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+        
     - name: Download and extract AVD
       run: |
         mkdir -p $HOME/.android/avd
         cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
         cd $HOME/.android/avd
         tar -xvf Pixel_7_1.avd.tar.xz
+        cp Pixel_7_1.avd/config.ini $HOME/.android/avd/Pixel_7.ini # Copy .ini file to the correct location
 
-    - name: Create AVD
+    - name: Create and start AVD
       run: |
-        $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n Pixel_7 -k "system-images;android-30;google_apis;x86_64" -d pixel
-
-    - name: Start AVD
-      run: |
-        nohup $HOME/sdk/emulator/emulator -avd Pixel_7 -no-window -no-audio &
+        nohup $HOME/sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         adb wait-for-device
         adb shell input keyevent 82
 
