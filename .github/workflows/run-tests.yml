@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  # pull_request:
-    # branches:
-    #   - main
   schedule:
     - cron: '0 16 * * *'
 
@@ -30,51 +27,36 @@ jobs:
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
         unzip -d $HOME/Android/Sdk/cmdline-tools cmdline-tools.zip
         mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools/ $HOME/Android/Sdk/cmdline-tools/latest
+        export PATH=$HOME/Android/Sdk/cmdline-tools/latest/bin:$PATH
 
     - name: Set up Android environment
       run: |
-        echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/Android/Sdk/cmdline-tools/latest/bin:$HOME/Android/Sdk/platform-tools:$PATH" >> $GITHUB_ENV
-
-    - name: Download and extract AVD
-      run: |
-        mkdir -p $HOME/.android/avd
-        cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
-        cd $HOME/.android/avd
-        tar -xvf Pixel_7_1.avd.tar.xz
-        # Create the .ini file for the AVD
-        echo "avd_id=Pixel_7_1" > Pixel_7_1.avd/Pixel_7_1.ini
-        echo "path=$HOME/.android/avd/Pixel_7_1.avd" >> Pixel_7_1.avd/Pixel_7_1.ini
+        export ANDROID_HOME=$HOME/Android/Sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        echo "export ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "export PATH=$PATH" >> $GITHUB_ENV
 
     - name: Install SDK packages
       run: |
         yes | sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
-    - name: List Emulator Directory
+    - name: Create AVD
       run: |
-        echo "Listing contents of the emulator directory..."
-        ls -la $HOME/Android/Sdk/emulator
-
-    - name: Start Emulator
-      run: |
-        echo "Starting the emulator..."
-        echo "Current PATH: $PATH"
-        
-        adb version || echo "adb command not found, checking if emulator path is correct..."
-        
-        $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
-        
-        adb wait-for-device || echo "Failed to wait for the device"
-        adb shell input keyevent 82 || echo "Failed to send input keyevent"
+        echo "Creating the AVD..."
+        echo "no" | avdmanager create avd -n Pixel_7_1 -k "system-images;android-30;google_apis;x86_64" --force
 
     - name: List AVDs
       run: |
         $HOME/Android/Sdk/emulator/emulator -list-avds
 
-    - name: Wait for Emulator to boot
+    - name: Start Emulator
       run: |
-        adb wait-for-device
-        adb shell "while [[ \$(getprop sys.boot_completed) != 1 ]]; do sleep 1; done"
+        echo "Starting the emulator..."
+        $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
+        
+        # Wait for the emulator to boot
+        adb wait-for-device || echo "Failed to wait for the device"
+        adb shell input keyevent 82 || echo "Failed to send input keyevent"
 
     - name: Run Tests
       run: |
