@@ -84,14 +84,3 @@ jobs:
       env:
         DOTNET_ROOT: /usr/share/dotnet
         PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
-
-Key Points:
-
-Packages: This YAML installs necessary packages like Java, Node.js, Appium, Android SDK, and .NET SDK.
-
-AVD Setup: Ensures the AVD is downloaded, extracted, and emulator binaries are properly set.
-
-Emulator Launch: The Android emulator is started headlessly (-no-window -no-audio) and waits for the device to be ready (adb wait-for-device).
-
-
-Test this and see if the emulator runs smoothly. Adjustments might be needed based on specific errors that may arise.
