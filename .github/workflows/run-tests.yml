@@ -32,13 +32,19 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y wget unzip
         
+        # Create the SDK directory
+        mkdir -p $HOME/Android/Sdk
+
+        # Download the command line tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip -d $HOME/Android/Sdk/
         rm cmdline-tools.zip
         mv $HOME/Android/Sdk/cmdline-tools $HOME/Android/Sdk/cmdline-tools_latest
 
+        # Add to PATH
         echo "export PATH=\$PATH:$HOME/Android/Sdk/cmdline-tools_latest/bin" >> $GITHUB_ENV
 
+        # Install required SDK components
         yes | $HOME/Android/Sdk/cmdline-tools_latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk --install "platform-tools" "platforms;android-30" "emulator"
 
     - name: Create AVD directory
