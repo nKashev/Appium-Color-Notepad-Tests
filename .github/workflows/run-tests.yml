@@ -21,11 +21,6 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    - name: Set up .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '7.0.x'
-
     - name: Install Android SDK Command-line Tools
       run: |
         mkdir -p $HOME/Android/Sdk/cmdline-tools
@@ -36,26 +31,21 @@ jobs:
         echo "export PATH=\$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
         echo "export ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
 
-    - name: Install Android SDK Packages
+    - name: Verify Android SDK Tools Installation
       run: |
+        echo "Checking for sdkmanager..."
+        ls $HOME/Android/Sdk/cmdline-tools/latest/bin
+
+    - name: Install SDK packages
+      run: |
+        echo "Installing SDK packages..."
         yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
-    - name: Set up AVD
+    - name: Extract AVD and Copy .ini
       run: |
         mkdir -p $HOME/.android/avd
         tar -xf avd/Pixel_7_1.tar.xz -C $HOME/.android/avd/
         cp avd/Pixel_7_1.ini $HOME/.android/avd/
-
-    - name: Verify AVD Files
-      run: |
-        echo "Listing AVD files..."
-        ls -l $HOME/.android/avd
-        ls -l $HOME/.android/avd/Pixel_7_1.avd
-
-    - name: Create AVD
-      run: |
-        echo "Creating the AVD..."
-        echo "no" | $HOME/Android/Sdk/cmdline-tools/latest/bin/avdmanager create avd -n Pixel_7_1 -k "system-images;android-30;google_apis;x86_64" --force
 
     - name: List AVDs
       run: |
@@ -65,14 +55,17 @@ jobs:
       run: |
         echo "Starting the emulator..."
         $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
-        # Wait for the emulator to boot (adjust the time if necessary)
+        
+        # Wait for the emulator to boot
         echo "Waiting for the emulator to boot..."
-        sleep 60  # wait for 60 seconds to ensure the emulator is ready
+        sleep 60  # Adjust time if necessary
         adb wait-for-device || echo "Failed to wait for the device"
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
-      env:
-        ANDROID_HOME: $HOME/Android/Sdk
-        PATH: $PATH:$HOME/Android/Sdk/platform-tools
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '7.0.x'
 
     - name: Run Tests
       run: |
@@ -80,5 +73,3 @@ jobs:
         dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
       env:
         DOTNET_ROOT: /usr/share/dotnet
-        ANDROID_HOME: $HOME/Android/Sdk
-        PATH: $PATH:$HOME/Android/Sdk/platform-tools
