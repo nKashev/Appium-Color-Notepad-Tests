@@ -23,7 +23,10 @@ jobs:
 
     - name: Install Node.js and Appium
       run: |
-        choco install nodejs-lts
+        # Install Node.js
+        curl -sL https://deb.nodesource.com/setup_14.x | bash -
+        choco install nodejs
+        # Install Appium
         npm install -g appium
 
     - name: Install .NET SDK
@@ -31,26 +34,47 @@ jobs:
       with:
         dotnet-version: '6.0.x'
 
-    - name: Set Android SDK environment variables
-      run: echo "ANDROID_SDK_ROOT=C:/Users/runner/AppData/Local/Android/Sdk" >> $GITHUB_ENV
-
-    - name: Set up Emulator Binaries
-      run: |
-        mkdir -p C:/Users/runner/AppData/Local/Android/Sdk/emulator
-        cp tools/emulator.exe C:/Users/runner/AppData/Local/Android/Sdk/emulator/
-        cp tools/emulator-check.exe C:/Users/runner/AppData/Local/Android/Sdk/emulator/
-        ls C:/Users/runner/AppData/Local/Android/Sdk/emulator
-
     - name: Download and extract AVD
       run: |
         mkdir -p C:/Users/runner/.android/avd
+        echo "Extracting AVD..."
         tar -xvf avd/Pixel_7_1.avd.tar.xz -C C:/Users/runner/.android/avd/
+        echo "Listing extracted files..."
+        ls -l C:/Users/runner/.android/avd/Pixel_7_1.avd/
+      shell: pwsh
 
-    - name: Create and start AVD
+    - name: Setup Android SDK
       run: |
-        start C:/Users/runner/AppData/Local/Android/Sdk/emulator/emulator.exe -avd Pixel_7_1 -no-window -no-audio
+        mkdir -p C:/Users/runner/sdk/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-win-7583922_latest.zip -OutFile C:/Users/runner/sdk/cmdline-tools/commandlinetools-win.zip
+        Expand-Archive -Path C:/Users/runner/sdk/cmdline-tools/commandlinetools-win.zip -DestinationPath C:/Users/runner/sdk/cmdline-tools
+        rm C:/Users/runner/sdk/cmdline-tools/commandlinetools-win.zip
+        move C:/Users/runner/sdk/cmdline-tools/cmdline-tools C:/Users/runner/sdk/cmdline-tools/latest
+      shell: pwsh
+
+    - name: Set Android SDK environment variables
+      run: |
+        echo "ANDROID_SDK_ROOT=C:/Users/runner/sdk" >> $env:GITHUB_ENV
+
+    - name: Install Android Emulator and System Image
+      run: |
+        yes | C:/Users/runner/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=C:/Users/runner/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+      shell: pwsh
+
+    - name: Copy emulator binaries
+      run: |
+        mkdir -p C:/Users/runner/sdk/emulator
+        cp tools/emulator.exe C:/Users/runner/sdk/emulator/
+        cp tools/emulator-check.exe C:/Users/runner/sdk/emulator/
+        ls C:/Users/runner/sdk/emulator
+      shell: pwsh
+
+    - name: Start AVD
+      run: |
+        Start-Process -NoNewWindow -FilePath C:/Users/runner/sdk/emulator/emulator.exe -ArgumentList '-avd Pixel_7_1 -no-window -no-audio'
         adb wait-for-device
         adb shell input keyevent 82
+      shell: pwsh
 
     - name: Run Tests
       run: |
@@ -58,4 +82,4 @@ jobs:
         dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
       env:
         DOTNET_ROOT: C:/Program Files/dotnet
-        PATH: C:/Users/runner/AppData/Local/Android/Sdk/platform-tools;C:/Users/runner/AppData/Local/Android/Sdk/emulator;C:/Users/runner/AppData/Local/Android/Sdk/tools;C:/Users/runner/AppData/Local/Android/Sdk/tools/bin;$PATH
+        PATH: C:/Users/runner/sdk/cmdline-tools/latest/bin;C:/Users/runner/sdk/platform-tools;C:/Users/runner/sdk/emulator;$PATH
