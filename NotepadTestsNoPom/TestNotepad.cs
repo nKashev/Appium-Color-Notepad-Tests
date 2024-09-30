@@ -3,23 +3,26 @@ using OpenQA.Selenium.Appium.Android;
 using OpenQA.Selenium;
 using NUnit.Framework;
 using System;
+using OpenQA.Selenium.Support.UI;
+using SeleniumExtras.WaitHelpers; // For ExpectedConditions
 
 namespace NotepadTestsNoPom
 {
     [TestFixture]
     public class NotepadTests
     {
-        private AndroidDriver _driver;
+        private AndroidDriver<AppiumElement> _driver; // Updated to use AppiumElement for Appium 5.x
         private AppiumLocalService _appiumLocalService;
+        private WebDriverWait _wait;
 
         [OneTimeSetUp]
         public void Setup()
         {
             // Start Appium Local Service
             _appiumLocalService = new AppiumServiceBuilder()
-                  .WithIPAddress("127.0.0.1")
-                  .UsingPort(4723)
-                  .Build();
+                .WithIPAddress("127.0.0.1")
+                .UsingPort(4723)
+                .Build();
             _appiumLocalService.Start();
 
             // Setup Appium options
@@ -32,27 +35,27 @@ namespace NotepadTestsNoPom
             };
             androidOptions.AddAdditionalAppiumOption("autoGrantPermissions", true);
 
-            // Use the existing Appium server URL
-            _driver = new AndroidDriver(new Uri("http://127.0.0.1:4723"), androidOptions);
+            // Initialize driver and set timeouts
+            _driver = new AndroidDriver<AppiumElement>(new Uri("http://127.0.0.1:4723"), androidOptions);
             _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10)); // Explicit wait
 
             // Handle tutorial skipping
-            try
-            {
-                var skipTutorial = _driver.FindElement(MobileBy.Id("com.socialnmobile.dictapps.notepad.color.note:id/btn_start_skip"));
-                skipTutorial.Click();
-            }
-            catch (NoSuchElementException)
-            {
-                // Tutorial skip button not found, continue with setup
-            }
+            SkipTutorial();
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            _driver?.Quit();
-            _appiumLocalService.Dispose(); // Ensure the Appium service is stopped
+            try
+            {
+                _driver?.Quit(); // Safely quit the driver
+                _appiumLocalService?.Dispose(); // Ensure the Appium service is stopped
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during teardown: {ex.Message}");
+            }
         }
         
         [Test, Order(1)]
