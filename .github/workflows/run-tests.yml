@@ -30,8 +30,16 @@ jobs:
       run: |
         echo "Installing Android SDK and Emulator..."
         sudo apt-get update
-        sudo apt-get install -y android-sdk
-        yes | sdkmanager --sdk_root=$HOME/Android/Sdk --install "platform-tools" "platforms;android-30" "emulator"
+        sudo apt-get install -y wget unzip
+        
+        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $HOME/Android/Sdk/
+        rm cmdline-tools.zip
+        mv $HOME/Android/Sdk/cmdline-tools $HOME/Android/Sdk/cmdline-tools_latest
+
+        echo "export PATH=\$PATH:$HOME/Android/Sdk/cmdline-tools_latest/bin" >> $GITHUB_ENV
+
+        yes | $HOME/Android/Sdk/cmdline-tools_latest/bin/sdkmanager --sdk_root=$HOME/Android/Sdk --install "platform-tools" "platforms;android-30" "emulator"
 
     - name: Create AVD directory
       run: mkdir -p $HOME/.android/avd
@@ -46,6 +54,7 @@ jobs:
         echo "Starting the emulator..."
         $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         
+        # Wait for the emulator to boot (adjust the time if necessary)
         echo "Waiting for the emulator to boot..."
         sleep 60  # wait for 60 seconds to ensure the emulator is ready
 
@@ -53,7 +62,7 @@ jobs:
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
       env:
         JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.4-7/x64
-        ANDROID_HOME: /home/runner/Android/Sdk
+        ANDROID_HOME: $HOME/Android/Sdk
         PATH: $PATH:/home/runner/Android/Sdk/platform-tools:/home/runner/Android/Sdk/emulator
 
     - name: Run Tests
