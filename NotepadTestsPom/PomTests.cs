@@ -9,7 +9,7 @@ namespace NotepadTestsPom
     [TestFixture]
     public class NotepadTests
     {
-        private AndroidDriver<AndroidElement> _driver;
+        private AndroidDriver _driver; // No need for <AndroidElement> here
         private NotepadPage _notepadPage;
         private AppiumLocalService _appiumLocalService;
 
@@ -36,7 +36,7 @@ namespace NotepadTestsPom
                 androidOptions.AddAdditionalAppiumOption("autoGrantPermissions", true);
 
                 // Initialize the driver
-                _driver = new AndroidDriver<AndroidElement>(new Uri("http://127.0.0.1:4723"), androidOptions);
+                _driver = new AndroidDriver(new Uri("http://127.0.0.1:4723"), androidOptions); // No <AndroidElement> here
                 _notepadPage = new NotepadPage(_driver);
                 _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
 
