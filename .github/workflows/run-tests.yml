@@ -48,21 +48,28 @@ jobs:
 
     - name: Install SDK packages
       run: |
-        sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-    
+        yes | sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+
+    - name: List Emulator Directory
+      run: |
+        echo "Listing contents of the emulator directory..."
+        ls -la $HOME/Android/Sdk/emulator
+
     - name: Start Emulator
       run: |
         echo "Starting the emulator..."
         echo "Current PATH: $PATH"
-        echo "Checking adb version..."
+        
         adb version || echo "adb command not found, checking if emulator path is correct..."
         
-        # Start the emulator in the foreground for debugging
         $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         
-        # Wait for the emulator to boot
-        adb wait-for-device
-        adb shell input keyevent 82
+        adb wait-for-device || echo "Failed to wait for the device"
+        adb shell input keyevent 82 || echo "Failed to send input keyevent"
+
+    - name: List AVDs
+      run: |
+        $HOME/Android/Sdk/emulator/emulator -list-avds
 
     - name: Wait for Emulator to boot
       run: |
