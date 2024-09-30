@@ -1,11 +1,11 @@
 name: Run Appium Tests
 
 on:
-  push:
-    branches:
-     - main
-  schedule:
-    - cron: '0 16 * * *'
+  # push:
+  #   branches:
+  #    - main
+  # schedule:
+  #   - cron: '0 16 * * *'
 
 jobs:
   build:
