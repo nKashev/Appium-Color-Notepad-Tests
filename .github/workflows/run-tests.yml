@@ -42,6 +42,11 @@ jobs:
         yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
         echo "export PATH=\$PATH:$HOME/Android/Sdk/platform-tools" >> $GITHUB_ENV
 
+    - name: Move AVD .ini file
+      run: |
+        mkdir -p $HOME/.android/avd
+        cp Pixel_7_1.ini $HOME/.android/avd/
+
     - name: Create AVD
       run: |
         echo "Creating the AVD..."
@@ -56,12 +61,16 @@ jobs:
         echo "Starting the emulator..."
         $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         
-        # Wait for the emulator to boot (adjust the time if necessary)
         echo "Waiting for the emulator to boot..."
-        sleep 60  # wait for 60 seconds to ensure the emulator is ready
+        sleep 60
 
         adb wait-for-device || echo "Failed to wait for the device"
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
+
+    - name: Restore NuGet packages
+      run: |
+        dotnet restore NotepadTestsPom/NotepadTestsPom.csproj
+        dotnet restore NotepadTestsNoPom/NotepadTestsNoPom.csproj
 
     - name: Run Tests
       run: |
