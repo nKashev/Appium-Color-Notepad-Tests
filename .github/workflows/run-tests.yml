@@ -63,8 +63,10 @@ jobs:
     - name: Set up Emulator Binaries
       run: |
         mkdir -p $HOME/sdk/emulator
+        ls tools # List the tools folder to verify the files are there
         cp tools/emulator.exe $HOME/sdk/emulator/
         cp tools/emulator-check.exe $HOME/sdk/emulator/
+        ls $HOME/sdk/emulator # List the emulator directory to verify the files are copied
         chmod +x $HOME/sdk/emulator/emulator
         chmod +x $HOME/sdk/emulator/emulator-check
 
