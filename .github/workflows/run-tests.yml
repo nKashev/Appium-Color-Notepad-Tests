@@ -52,7 +52,15 @@ jobs:
     
     - name: Start Emulator
       run: |
-        nohup $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
+        echo "Starting the emulator..."
+        echo "Current PATH: $PATH"
+        echo "Checking adb version..."
+        adb version || echo "adb command not found, checking if emulator path is correct..."
+        
+        # Start the emulator in the foreground for debugging
+        $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
+        
+        # Wait for the emulator to boot
         adb wait-for-device
         adb shell input keyevent 82
 
