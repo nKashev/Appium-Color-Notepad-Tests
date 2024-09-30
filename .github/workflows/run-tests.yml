@@ -1,9 +1,9 @@
 name: Run Appium Tests
 
 on:
-#   push:
-#     branches:
-#       - main
+  #   push:
+  #     branches:
+  #       - main
   schedule:
     - cron: '0 16 * * *'
 
@@ -13,13 +13,18 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up JDK
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: '21'
         distribution: 'temurin'
+
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0.x'  # Specify the version you need
 
     - name: Install Android SDK Command-line Tools
       run: |
@@ -40,6 +45,7 @@ jobs:
       run: |
         echo "Installing SDK packages..."
         yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+        echo "export PATH=\$PATH:$HOME/Android/Sdk/platform-tools" >> $GITHUB_ENV
 
     - name: Create AVD
       run: |
@@ -54,8 +60,11 @@ jobs:
       run: |
         echo "Starting the emulator..."
         $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
+
+        # Wait for the emulator to boot (adjust the time if necessary)
+        echo "Waiting for the emulator to boot..."
+        sleep 60  # wait for 60 seconds to ensure the emulator is ready
         
-        # Wait for the emulator to boot
         adb wait-for-device || echo "Failed to wait for the device"
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
 
