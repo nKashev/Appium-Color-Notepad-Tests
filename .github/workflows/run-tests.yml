@@ -20,7 +20,12 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-
+        
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+        
     - name: Install Android SDK Command-line Tools
       run: |
         mkdir -p $HOME/Android/Sdk/cmdline-tools
@@ -41,11 +46,14 @@ jobs:
         echo "Installing SDK packages..."
         yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
-    - name: Extract AVD and Copy .ini
+    - name: Create AVD directory
+      run: mkdir -p $HOME/.android/avd
+
+    - name: Extract AVD files
       run: |
-        mkdir -p $HOME/.android/avd
+        echo "Extracting AVD files..."
         tar -xf avd/Pixel_7_1.tar.xz -C $HOME/.android/avd/
-        cp avd/Pixel_7_1.ini $HOME/.android/avd/
+        cp $HOME/.android/avd/Pixel_7_1/Pixel_7_1.ini $HOME/.android/avd/
 
     - name: List AVDs
       run: |
@@ -58,14 +66,8 @@ jobs:
         
         # Wait for the emulator to boot
         echo "Waiting for the emulator to boot..."
-        sleep 60  # Adjust time if necessary
         adb wait-for-device || echo "Failed to wait for the device"
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
-
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0.x'
 
     - name: Run Tests
       run: |
