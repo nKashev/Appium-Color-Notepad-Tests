@@ -1,6 +1,6 @@
 name: Run Appium Tests
 
-# on:
+on:
 #   push:
 #     branches:
 #       - main
