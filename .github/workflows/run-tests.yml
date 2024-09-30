@@ -56,8 +56,9 @@ jobs:
         echo "Starting the emulator..."
         $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         
+        # Wait for the emulator to boot (adjust the time if necessary)
         echo "Waiting for the emulator to boot..."
-        sleep 60 
+        sleep 60  # wait for 60 seconds to ensure the emulator is ready
 
         adb wait-for-device || echo "Failed to wait for the device"
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
