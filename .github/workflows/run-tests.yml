@@ -33,11 +33,6 @@ jobs:
         sudo apt-get install -y nodejs
         npm install -g appium
 
-    - name: Install .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0.x'
-
     - name: Install Android SDK
       run: |
         mkdir -p $HOME/sdk/cmdline-tools
@@ -47,7 +42,11 @@ jobs:
         mv $HOME/sdk/cmdline-tools/cmdline-tools $HOME/sdk/cmdline-tools/latest
 
     - name: Set Android SDK environment variables
-      run: echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
+      run: |
+        echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
+        echo "PATH=$HOME/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+        echo "PATH=$HOME/sdk/emulator:$PATH" >> $GITHUB_ENV
+        echo "PATH=$HOME/sdk/platform-tools:$PATH" >> $GITHUB_ENV
 
     - name: Install Android Emulator and System Image
       run: |
@@ -59,7 +58,6 @@ jobs:
         cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
         cd $HOME/.android/avd
         tar -xvf Pixel_7_1.avd.tar.xz
-        cp Pixel_7_1.avd/config.ini $HOME/.android/avd/Pixel_7.ini # Copy .ini file to the correct location
 
     - name: Create and start AVD
       run: |
@@ -73,4 +71,3 @@ jobs:
         dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
       env:
         DOTNET_ROOT: /usr/share/dotnet
-        PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
