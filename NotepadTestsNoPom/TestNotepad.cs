@@ -30,7 +30,7 @@ namespace NotepadTestsNoPom
             {
                 PlatformName = "Android",
                 AutomationName = "UIAutomator2",
-                DeviceName = "Pixel_7",
+                DeviceName = "Pixel_7_1",
                 App = @"apk/Notepad.apk" // Adjust this path as necessary
             };
             androidOptions.AddAdditionalAppiumOption("autoGrantPermissions", true);
