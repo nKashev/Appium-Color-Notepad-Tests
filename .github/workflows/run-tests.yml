@@ -15,55 +15,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v2
 
     - name: Set up JDK
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v2
       with:
-        distribution: 'temurin'
         java-version: '21'
+        distribution: 'temurin'
 
-    - name: Install required packages
+    - name: Install Android SDK Command-line Tools
       run: |
-        sudo apt-get update
-        sudo apt-get install -y unzip wget xz-utils
-        # Install Node.js and Appium
-        curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-        sudo apt-get install -y nodejs
-        npm install -g appium
+        mkdir -p $HOME/Android/Sdk/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
+        unzip -d $HOME/Android/Sdk/cmdline-tools cmdline-tools.zip
+        mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools/ $HOME/Android/Sdk/cmdline-tools/latest
 
-    - name: Install Android SDK
+    - name: Set up Android environment
       run: |
-        mkdir -p $HOME/sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -P $HOME/sdk/cmdline-tools
-        unzip $HOME/sdk/cmdline-tools/commandlinetools-linux-7583922_latest.zip -d $HOME/sdk/cmdline-tools
-        rm $HOME/sdk/cmdline-tools/commandlinetools-linux-7583922_latest.zip
-        mv $HOME/sdk/cmdline-tools/cmdline-tools $HOME/sdk/cmdline-tools/latest
+        echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
+        echo "PATH=$HOME/Android/Sdk/cmdline-tools/latest/bin:$HOME/Android/Sdk/platform-tools:$PATH" >> $GITHUB_ENV
 
-    - name: Set Android SDK environment variables
-      run: |
-        echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
-        echo "PATH=$HOME/sdk/emulator:$PATH" >> $GITHUB_ENV
-        echo "PATH=$HOME/sdk/platform-tools:$PATH" >> $GITHUB_ENV
-
-    - name: Install Android Emulator and System Image
-      run: |
-        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-        
     - name: Download and extract AVD
       run: |
         mkdir -p $HOME/.android/avd
         cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
         cd $HOME/.android/avd
         tar -xvf Pixel_7_1.avd.tar.xz
+        # Create the .ini file for the AVD
+        echo "avd_id=Pixel_7_1" > Pixel_7_1.avd/Pixel_7_1.ini
+        echo "path=$HOME/.android/avd/Pixel_7_1.avd" >> Pixel_7_1.avd/Pixel_7_1.ini
 
-    - name: Create and start AVD
+    - name: Install SDK packages
       run: |
-        nohup $HOME/sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
+        sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
+    
+    - name: Start Emulator
+      run: |
+        nohup $HOME/Android/Sdk/emulator/emulator -avd Pixel_7_1 -no-window -no-audio &
         adb wait-for-device
         adb shell input keyevent 82
+
+    - name: Wait for Emulator to boot
+      run: |
+        adb wait-for-device
+        adb shell "while [[ \$(getprop sys.boot_completed) != 1 ]]; do sleep 1; done"
 
     - name: Run Tests
       run: |
