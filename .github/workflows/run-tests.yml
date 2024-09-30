@@ -38,29 +38,35 @@ jobs:
       with:
         dotnet-version: '6.0.x'
 
-    - name: Install Android SDK command-line tools
+    - name: Install Android SDK
       run: |
-        mkdir -p $HOME/Android/Sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -P $HOME/Downloads
-        unzip -d $HOME/Android/Sdk/cmdline-tools $HOME/Downloads/commandlinetools-linux-10406996_latest.zip
-        mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+        mkdir -p $HOME/sdk/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -P $HOME/sdk/cmdline-tools
+        unzip $HOME/sdk/cmdline-tools/commandlinetools-linux-7583922_latest.zip -d $HOME/sdk/cmdline-tools
+        rm $HOME/sdk/cmdline-tools/commandlinetools-linux-7583922_latest.zip
+        mv $HOME/sdk/cmdline-tools/cmdline-tools $HOME/sdk/cmdline-tools/latest
 
-    - name: Set environment variables
-      run: |
-        echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/Android/Sdk/cmdline-tools/latest/bin:$HOME/Android/Sdk/emulator:$HOME/Android/Sdk/platform-tools:$PATH" >> $GITHUB_ENV
+    - name: Set Android SDK environment variables
+      run: echo "ANDROID_SDK_ROOT=$HOME/sdk" >> $GITHUB_ENV
 
     - name: Install Android Emulator and System Image
       run: |
-        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "emulator" "platform-tools" "platforms;android-29" "system-images;android-29;google_apis;x86_64"
+        yes | $HOME/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/sdk --install "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
 
-    - name: Create AVD with name Pixel_7
+    - name: Download and extract AVD
       run: |
-        $HOME/Android/Sdk/cmdline-tools/latest/bin/avdmanager create avd -n Pixel_7 -k "system-images;android-29;google_apis;x86_64" -d pixel
+        mkdir -p $HOME/.android/avd
+        cp avd/Pixel_7_1.avd.tar.xz $HOME/.android/avd/
+        cd $HOME/.android/avd
+        tar -xvf Pixel_7_1.avd.tar.xz
+
+    - name: Create AVD
+      run: |
+        $HOME/sdk/cmdline-tools/latest/bin/avdmanager create avd -n Pixel_7 -k "system-images;android-30;google_apis;x86_64" -d pixel
 
     - name: Start AVD
       run: |
-        nohup $HOME/Android/Sdk/emulator/emulator -avd Pixel_7 -no-window -no-audio &
+        nohup $HOME/sdk/emulator/emulator -avd Pixel_7 -no-window -no-audio &
         adb wait-for-device
         adb shell input keyevent 82
 
@@ -70,4 +76,4 @@ jobs:
         dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
       env:
         DOTNET_ROOT: /usr/share/dotnet
-        PATH: $HOME/Android/Sdk/cmdline-tools/latest/bin:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/emulator:$PATH
+        PATH: $HOME/sdk/cmdline-tools/latest/bin:$HOME/sdk/platform-tools:$HOME/sdk/emulator:$HOME/sdk/tools:$HOME/sdk/tools/bin:$PATH
