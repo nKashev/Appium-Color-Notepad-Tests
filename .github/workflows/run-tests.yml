@@ -15,16 +15,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.x'
+
     - name: Set up JDK
       uses: actions/setup-java@v3
       with:
         java-version: '21'
         distribution: 'temurin'
-
-    - name: Install .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0.x'
 
     - name: Install Android SDK Command-line Tools
       run: |
@@ -32,25 +32,22 @@ jobs:
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
         unzip -d $HOME/Android/Sdk/cmdline-tools cmdline-tools.zip
         mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools/ $HOME/Android/Sdk/cmdline-tools/latest
-        # Add cmdline-tools to PATH
         echo "export PATH=\$PATH:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
         echo "export ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
 
     - name: Install SDK packages
       run: |
-        echo "Installing SDK packages..."
         yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --install "emulator" "platform-tools" "platforms;android-30" "system-images;android-30;google_apis;x86_64"
-        echo "export PATH=\$PATH:$HOME/Android/Sdk/platform-tools" >> $GITHUB_ENV
 
     - name: Move AVD .ini file
       run: |
         mkdir -p $HOME/.android/avd
-        cp Pixel_7_1.ini $HOME/.android/avd/
+        cp avd/Pixel_7_1.ini $HOME/.android/avd/
 
-    - name: Create AVD
+    - name: Unpack AVD files
       run: |
-        echo "Creating the AVD..."
-        echo "no" | $HOME/Android/Sdk/cmdline-tools/latest/bin/avdmanager create avd -n Pixel_7_1 -k "system-images;android-30;google_apis;x86_64" --force
+        mkdir -p $HOME/.android/avd/Pixel_7_1.avd
+        tar -xf avd/Pixel_7_1.tar.xz -C $HOME/.android/avd/
 
     - name: List AVDs
       run: |
@@ -63,14 +60,11 @@ jobs:
         
         echo "Waiting for the emulator to boot..."
         sleep 60
-
+        
         adb wait-for-device || echo "Failed to wait for the device"
         adb shell input keyevent 82 || echo "Failed to send input keyevent"
-
-    - name: Restore NuGet packages
-      run: |
-        dotnet restore NotepadTestsPom/NotepadTestsPom.csproj
-        dotnet restore NotepadTestsNoPom/NotepadTestsNoPom.csproj
+      env:
+        PATH: $PATH:$HOME/Android/Sdk/platform-tools
 
     - name: Run Tests
       run: |
