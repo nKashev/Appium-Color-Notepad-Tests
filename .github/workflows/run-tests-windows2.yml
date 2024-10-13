@@ -34,26 +34,36 @@ jobs:
     
     - name: Install Appium and dependencies
       run: |
-        npm install -g appium@latest
+        npm install -g appium@2.0.0
         appium driver install uiautomator2
+        npm install -g appium-uiautomator2-driver@2.29.6
     
     - name: Start Appium Server
-      run: appium &  # Start Appium server in the background
+      run: start-process appium
     
+    - name: Check Current Directory
+      run: |
+        Get-Location
+        Get-ChildItem -Path $env:ANDROID_HOME
+    
+    - name: Create AVD Directory
+      run: |
+        echo "Creating AVD directory..."
+        New-Item -Path "$env:ANDROID_HOME\avd" -ItemType Directory -Force
+        echo "AVD directory created at $env:ANDROID_HOME\avd"
+
     - name: Extract Android Virtual Device
       run: |
-        mkdir %ANDROID_HOME%\avd
-        tar -xJf avd/Pixel_7_1.tar.xz -C %ANDROID_HOME%\avd  # Use -J for faster extraction
+        tar -xJf avd/Pixel_7_1.tar.xz -C $env:ANDROID_HOME\avd  # Use -J for faster extraction
     
     - name: Start Android Emulator
       run: |
-        %ANDROID_HOME%\emulator\emulator.exe -avd Pixel_7_1 -no-window -no-audio -no-boot-anim &
-        %ANDROID_HOME%\platform-tools\adb.exe wait-for-device
-        %ANDROID_HOME%\platform-tools\adb.exe shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+        & "$env:ANDROID_HOME\emulator\emulator.exe" -avd Pixel_7_1 -no-window -no-audio -no-boot-anim &
+        & "$env:ANDROID_HOME\platform-tools\adb.exe" wait-for-device
     
     - name: Install APK
       run: |
-        %ANDROID_HOME%\platform-tools\adb.exe install apk/Notepad.apk
+        & "$env:ANDROID_HOME\platform-tools\adb.exe" install apk/Notepad.apk
     
     - name: Run POM Tests
       run: dotnet test NotepadTestsPom/NotepadTestsPom.csproj
@@ -66,4 +76,4 @@ jobs:
       if: always()
       with:
         name: test-results
-        path: NotepadTestsPom/TestResults
+        path: TestResults
