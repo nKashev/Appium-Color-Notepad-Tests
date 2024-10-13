@@ -23,11 +23,14 @@ jobs:
     - name: Setup Java JDK
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
+        java-version: '17'  # Updated to Java 17
         distribution: 'temurin'
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        cmdline-tools-version: 'latest'
+        packages: 'platforms;android-30 build-tools-30.0.3 platform-tools emulator'
     
     - name: Install Appium
       run: |
@@ -44,12 +47,12 @@ jobs:
     
     - name: Start Android Emulator
       run: |
-        tools\emulator-check.exe accel
-        tools\emulator.exe -avd Pixel_7_1 -no-window -no-audio -no-boot-anim &
-        tools\emulator-check.exe wait-for-boot
+        %ANDROID_HOME%\tools\emulator.exe -avd Pixel_7_1 -no-window -no-audio -no-boot-anim &
+        %ANDROID_HOME%\platform-tools\adb.exe wait-for-device
     
     - name: Install APK
-      run: adb install apk/your-app.apk  # Replace with your actual APK filename
+      run: |
+        %ANDROID_HOME%\platform-tools\adb.exe install apk/Notepad.apk
     
     - name: Run POM Tests
       run: dotnet test NotepadTestsPom/NotepadTestsPom.csproj
