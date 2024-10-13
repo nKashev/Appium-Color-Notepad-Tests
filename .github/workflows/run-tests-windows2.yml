@@ -1,0 +1,65 @@
+name: Android App C# Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight UTC
+
+jobs:
+  test:
+    runs-on: windows-latest  # Using Windows for .NET and Emulator
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.0.x'  # Adjust if you're using a different version
+    
+    - name: Setup Java JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    
+    - name: Install Appium
+      run: |
+        npm install -g appium
+        appium driver install uiautomator2
+    
+    - name: Start Appium Server
+      run: start-process appium
+    
+    - name: Extract Android Virtual Device
+      run: |
+        mkdir %ANDROID_HOME%\avd
+        tar -xf avd/Pixel_7_1.tar.xz -C %ANDROID_HOME%\avd
+    
+    - name: Start Android Emulator
+      run: |
+        tools\emulator-check.exe accel
+        tools\emulator.exe -avd Pixel_7_1 -no-window -no-audio -no-boot-anim &
+        tools\emulator-check.exe wait-for-boot
+    
+    - name: Install APK
+      run: adb install apk/your-app.apk  # Replace with your actual APK filename
+    
+    - name: Run POM Tests
+      run: dotnet test NotepadTestsPom/NotepadTestsPom.csproj
+    
+    - name: Run Non-POM Tests
+      run: dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: test-results
+        path: TestResults  # Adjust this path if your results are stored elsewhere
