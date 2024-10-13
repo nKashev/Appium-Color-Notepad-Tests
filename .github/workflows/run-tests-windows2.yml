@@ -13,21 +13,21 @@ jobs:
     runs-on: windows-latest  # Using Windows for .NET and Emulator
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'  # Adjust if you're using a different version
     
     - name: Setup Java JDK
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: '11'
-        distribution: 'adopt'
+        distribution: 'temurin'
     
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
+      uses: android-actions/setup-android@v3
     
     - name: Install Appium
       run: |
@@ -58,7 +58,7 @@ jobs:
       run: dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
     
     - name: Upload Test Results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: always()
       with:
         name: test-results
