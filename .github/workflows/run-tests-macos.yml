@@ -1,0 +1,62 @@
+name: Android App C# Appium Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  test:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
+    
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Install and Run Appium Server
+      run: |
+        npm install -g appium@2.0.0
+        appium driver install uiautomator2
+        appium --log appium.log &
+    
+    - name: Run Android Emulator
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 30
+        arch: x86_64
+        profile: Nexus 6
+        script: |
+          adb devices
+          adb install apk/Notepad.apk
+          dotnet test NotepadTestsPom/NotepadTestsPom.csproj
+          dotnet test NotepadTestsNoPom/NotepadTestsNoPom.csproj
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: TestResults  # Adjust this path if your results are stored elsewhere
+    
+    - name: Upload Appium Logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: appium-logs
+        path: appium.log
