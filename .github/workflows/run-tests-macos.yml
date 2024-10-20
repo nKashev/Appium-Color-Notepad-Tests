@@ -1,12 +1,12 @@
 name: Android App C# Appium Tests
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: '0 0 * * *'  # Run daily at midnight UTC
+  #push:
+  #  branches: [ main ]
+  #pull_request:
+  #  branches: [ main ]
+  #schedule:
+  #  - cron: '0 0 * * *'
 
 jobs:
   test:
