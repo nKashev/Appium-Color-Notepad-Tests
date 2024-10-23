@@ -1,6 +1,7 @@
 name: Run Appium Tests
 
 on:
+  workflow_dispatch:
   # push:
   #   branches:
   #    - main
